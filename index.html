@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="utf-8" />
+  <title>Chatアプリ</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+  <!-- ブラウザの画面に見える内容 -->
+  <div id="chat-frame">
+    <div>
+        <!-- テキストエリア -->
+        <textarea name="" id="text" cols="100" rows="2"></textarea>
+    </div>
+
+    <div>
+        <!-- 送信ボタン -->
+        <button id="send">送信</button>
+        <button id="delete">削除</button>
+    </div>
+
+   <!-- 保存されたデータが表示される箇所 -->
+  </div>
+
+  <!--/ ブラウザの画面に見える内容 -->
+
+  <!-- JQuery -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+  <!--** 以下Firebase **-->
+  <!-- The core Firebase JS SDK is always required and must be listed first -->
+  <!-- ここにfirebaseのscriptを貼り付ける -->
+  <script src="https://www.gstatic.com/firebasejs/7.14.2/firebase.js"></script>
+
+  <script>
+    // Your web app's Firebase configuration
+    var firebaseConfig = {
+      apiKey: "AIzaSyA52vpIsBjGPBoAC4HIqsL1NxngMBZNR5k",
+      authDomain: "dev18-chat-9428b.firebaseapp.com",
+      databaseURL: "https://dev18-chat-9428b.firebaseio.com",
+      projectId: "dev18-chat-9428b",
+      storageBucket: "dev18-chat-9428b.appspot.com",
+      messagingSenderId: "1046439901709",
+      appId: "1:1046439901709:web:5716f4c35f887de5807344"
+    };
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+
+    //firebaseのデーターベース（保存させる場所）を使いますよと言うjsのコードを貼り付ける
+    // xxxxxスクリプトを貼り付ける
+    const newPostRef = firebase.database().ref('data');
+
+
+
+    
+    // outputText = translate("table");
+    // outputText.then(text => console.log(text));
+
+    // ここから下にjqueryの処理を書いて練習します
+    // 送信ボタンをクリックされたら次の処理をする
+    $("#send").on("click", function () {
+      // outputText = translate($("#text").val());
+      let outputText;
+      let inputText=$("#text").val();
+      let input_lang="";
+      let output_lang="";
+      let input_lang_en = isAlphabet(inputText); //falseなら日本語、trueなら英語
+      if(input_lang_en==true){
+        input_lang="en";
+        output_lang="ja";
+      }else{
+        input_lang="ja";
+        output_lang="en";
+      }
+
+      //Google翻訳のAPI(自分で作成)
+      //FYI:https://qiita.com/satto_sann/items/be4177360a0bc3691fdf
+      const URL = 'https://script.google.com/macros/s/AKfycbxFJQOP33CidHD_arTTuiAyikEN5O_pDFn2mBOFl2I0IsRxBxfK/exec?text='+inputText+'&source='+input_lang+'&target='+output_lang;
+
+
+      // URLを開いてテキスト取得
+      fetch(URL, {
+          method: "GET",
+        })
+            .then(response => response.json())
+            .then(data => outputText = data.text)
+            .then(() =>{
+                console.log("opT onclick: "+outputText);
+                
+                 // データを登録で送る
+                newPostRef.push({
+                    //テキストエリア
+                    text: $("#text").val(),
+                    //翻訳内容
+                    translatedText: outputText
+                })
+                
+                // 文字を空にする
+                $("#text").val(""); //空にする
+            });
+     
+
+
+
+    });
+
+    // 受信処理
+    newPostRef.on("child_added", function (data) {
+      //ここに保存されたデータが全て入ってくる
+      // function (data)のdataにfirebaseのデータが入ってくる
+      let v = data.val();
+
+
+      //テンプレートリテラル `` を活用して変数にhtmlを埋め込もう！ 
+      let str = 
+      `<p class="chat-talk">
+            <span class="talk-icon">
+                <img src="imgs/person.jpeg" alt="tartgeticon" width="45px" height="45px"/>
+            </span>
+            <span class="talk-content">${v.text}</span>
+        </p>
+        <p class="chat-talk mytalk">
+            <span class="talk-icon">
+                <img src="imgs/robot.jpeg" alt="myicon" width="45px" height="45px"/>
+            </span>
+            <span class="talk-content">${v.translatedText}</span>
+         </p>`;
+
+
+      // ここでデータをhtmlに埋め込む
+      $("#chat-frame").append(str);
+    })
+    //データ削除
+    $("#delete").on("click", function () { 
+        newPostRef.remove();
+        location.reload(); //削除ボタンがクリックされると画面を更新
+    })
+    
+
+  //入力テキストが英語ならTrue
+  function isAlphabet(str){
+    let eng = /^[a-zA-Z]/;
+    if(str.charAt(0).match(eng)){
+      return true;
+    }else{
+      return false;
+    }
+  }
+ 
+  </script>
+
+  
+</body>
+
+</html>
