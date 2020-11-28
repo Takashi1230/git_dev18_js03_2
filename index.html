@@ -51,7 +51,7 @@
     //firebaseのデーターベース（保存させる場所）を使いますよと言うjsのコードを貼り付ける
     // xxxxxスクリプトを貼り付ける
     const newPostRef = firebase.database().ref('data');
-
+    let output_lang_type;
 
 
     
@@ -70,9 +70,11 @@
       if(input_lang_en==true){
         input_lang="en";
         output_lang="ja";
+        output_lang_type="ja-JP";
       }else{
         input_lang="ja";
         output_lang="en";
+        output_lang_type="en-US";
       }
 
       //Google翻訳のAPI(自分で作成)
@@ -131,6 +133,13 @@
 
       // ここでデータをhtmlに埋め込む
       $("#chat-frame").append(str);
+
+      //音声読み上げ機能
+      let speak   = new SpeechSynthesisUtterance();
+      speak.text  = v.translatedText; //読み上げるテキスト
+      speak.rate  = 1; // 読み上げ速度 0.1-10 初期値:1 (倍速なら2, 半分の倍速なら0.5, )
+      speak.lang  = output_lang_type; 
+      speechSynthesis.speak(speak);
     })
     //データ削除
     $("#delete").on("click", function () { 
